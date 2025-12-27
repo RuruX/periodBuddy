@@ -1,22 +1,32 @@
-# 经期能量雷达（JS-only MVP · 全中文 · v3）
+# 🌙 Period Buddy
 
-## 本版新增
-- ✅ AI agent 改名 **Sunnie**，并配了「晴天娃娃」头像（聊天里也显示）
-- ✅ 增加滑动按钮：选择今天前后 3 天（共 7 天）的能量回顾/预测
-- ✅ 不再在 HTML 显示“模型参数入口”
-- ✅ 不显示“范围/维度标签含emoji/模型参数可调”等提示块
+👉 在线体验（PWA）：  
+https://period-buddy-sand.vercel.app
 
-## 运行
-```bash
-cd period_radar_mvp_cn_v3
-python -m http.server 8000
-```
-打开：
-http://localhost:8000
+Period Buddy 是一个轻量的经期能量可视化工具，帮助你理解周期变化，并把身体状态转化为当下可行动的建议。
 
-## 接入真实 AI agent
-在 `app.js` 里改：
-- `MODEL.aiAgent.mode = "fetch"` 并设置 `endpoint`（例如 `/api/agent`），请求体 `{message, context}`，返回 `{reply}`
-- 或 `MODEL.aiAgent.mode = "window"`，在页面注入 `window.PeriodAgent.send({message, context})`
+---
 
-> 备注：JS-only MVP 本身不会自带大模型推理，只预留了“把对话交给外部 agent”的接口。
+## 🌤️ Mission
+
+**让周期变得可理解、可预测、可善待。**
+
+我们希望用温柔、直观的方式，  
+帮助使用者在不同周期阶段，更好地安排运动、工作、休息与亲密。
+
+---
+
+## ✨ 功能简介
+
+- ⭐ 五维能量雷达（0–100）
+- 🕰 今天 ±3 天能量回顾 / 预测
+- 🃏 每日建议卡片（运动 / 工作 / 休息 / 亲密）
+- ☀️ Sunnie：基于当日状态的对话建议
+- 📱 PWA：可添加到主屏幕，像 App 一样使用
+
+---
+
+## ℹ️ 说明
+
+- 本项目仅供参考，非医疗建议  
+- 当前为 MVP / 原型阶段  
