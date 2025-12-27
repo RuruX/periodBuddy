@@ -22,7 +22,7 @@
 }
 
 *{ box-sizing:border-box; }
-body{ margin:0; background:var(--bg); color:var(--text); }
+body{ margin:0; background:var(--bg); color:var(--text); overflow-x:hidden; }
 .wrap{ max-width: 1040px; margin: 0 auto; padding: 22px; }
 
 .header{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:14px; }
@@ -47,7 +47,7 @@ h2{ margin: 0 0 10px; font-size: 18px; }
 
 .grid{
   display:grid;
-  grid-template-columns: 1fr 1fr 1fr auto;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 12px;
   align-items: end;
 }
@@ -74,7 +74,7 @@ button:hover{ filter: brightness(1.03); }
 
 .row{
   display:grid;
-  grid-template-columns: 1fr 320px;
+  grid-template-columns: 1fr minmax(240px, 320px);
   gap: 14px;
   margin-top: 14px;
   align-items: start;
@@ -88,6 +88,7 @@ button:hover{ filter: brightness(1.03); }
 }
 
 .rangeBar{
+  flex-wrap: wrap;
   display:flex;
   gap: 14px;
   align-items:center;
@@ -97,7 +98,7 @@ button:hover{ filter: brightness(1.03); }
 .rangeLeft{ display:flex; flex-direction:column; gap:3px; }
 .rangeTitle{ font-weight: 600; font-size: 14px; }
 .rangeSub{ color: var(--muted); font-size: 12px; }
-.slider{ width: 260px; }
+.slider{ width: 100%; max-width: 320px; }
 
 .hint{
   margin-top: 8px;
@@ -239,3 +240,104 @@ textarea{
 @media (max-width: 560px){
   .cards{ grid-template-columns: 1fr; }
 }
+
+
+/* PWA 安装卡片 */
+.installCard{ padding: 14px 16px; }
+.installRow{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.installTitle{ font-weight: 700; }
+.installSub{ color: var(--muted); font-size: 12px; margin-top: 3px; }
+.installBtn{ background: var(--btn); color: var(--btnText); border: 1px solid var(--btn); }
+
+
+/* ===== 翻页模式（横向滑动） ===== */
+.pager{ width:100%; overflow:hidden; }
+.pages{
+  display:flex;
+  width:300%;
+  transition: transform 320ms ease;
+  will-change: transform;
+}
+.page{
+  width:100%;
+  flex: 0 0 100%;
+}
+
+/* 页面顶部栏（返回 / 标题 / 右侧按钮） */
+.pageTop{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.pageTopTitle h2{ margin:0; }
+.pageTopTitle .sub{ margin-top: 4px; }
+.pageTopRight{ display:flex; align-items:center; justify-content:flex-end; min-width: 44px; }
+
+.backBtn{
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+}
+.backBtn:hover{ background: var(--pill); }
+
+.avatarBtn{
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: #fff;
+  padding: 0;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.avatarBtn img{ width: 100%; height: 100%; object-fit: cover; }
+
+.avatarSmall{
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background:#fff;
+}
+
+/* 五芒星浮动按钮（主页 -> 建议卡片） */
+.fabStar{
+  position:absolute;
+  top: 66px; /* 在 rangeBar 下方一点 */
+  right: 14px;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: #ffffff;
+  color: #2b6de9;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow: 0 6px 18px rgba(43,109,233,.12);
+}
+.fabStar:hover{ filter: brightness(1.02); }
+
+/* chartBox 需要相对定位，才能放 fab */
+.chartBox{ position: relative; }
+
+/* 移动端：浮动按钮稍微下移，避免遮挡 */
+@media (max-width: 560px){
+  .fabStar{ top: 76px; }
+}
+
+
+/* 输入区按钮：避免溢出 */
+.grid button{ width: 100%; }
+
+
+/* 让雷达图在不同屏幕保持合理比例 */
+.chartBox canvas{ width: 100% !important; height: 320px !important; }

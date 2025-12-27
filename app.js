@@ -14,6 +14,37 @@ const SUNNIE = {
   头像: "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%2796%27%20height%3D%2796%27%20viewBox%3D%270%200%2096%2096%27%3E%0A%3Cdefs%3E%0A%20%20%3ClinearGradient%20id%3D%27g%27%20x1%3D%270%27%20y1%3D%270%27%20x2%3D%270%27%20y2%3D%271%27%3E%0A%20%20%20%20%3Cstop%20offset%3D%270%27%20stop-color%3D%27%23ffffff%27/%3E%0A%20%20%20%20%3Cstop%20offset%3D%271%27%20stop-color%3D%27%23f1f4ff%27/%3E%0A%20%20%3C/linearGradient%3E%0A%3C/defs%3E%0A%3Crect%20width%3D%2796%27%20height%3D%2796%27%20rx%3D%2748%27%20fill%3D%27%23ffffff%27/%3E%0A%3C%21--%20little%20sun%20--%3E%0A%3Ccircle%20cx%3D%2774%27%20cy%3D%2722%27%20r%3D%2710%27%20fill%3D%27%23ffcc33%27%20stroke%3D%27%23f2b400%27%20stroke-width%3D%272%27/%3E%0A%3Cg%20stroke%3D%27%23f2b400%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%3E%0A%20%20%3Cline%20x1%3D%2774%27%20y1%3D%276%27%20x2%3D%2774%27%20y2%3D%272%27/%3E%0A%20%20%3Cline%20x1%3D%2774%27%20y1%3D%2742%27%20x2%3D%2774%27%20y2%3D%2746%27/%3E%0A%20%20%3Cline%20x1%3D%2758%27%20y1%3D%2722%27%20x2%3D%2754%27%20y2%3D%2722%27/%3E%0A%20%20%3Cline%20x1%3D%2790%27%20y1%3D%2722%27%20x2%3D%2794%27%20y2%3D%2722%27/%3E%0A%20%20%3Cline%20x1%3D%2763%27%20y1%3D%2711%27%20x2%3D%2760%27%20y2%3D%278%27/%3E%0A%20%20%3Cline%20x1%3D%2785%27%20y1%3D%2733%27%20x2%3D%2788%27%20y2%3D%2736%27/%3E%0A%20%20%3Cline%20x1%3D%2763%27%20y1%3D%2733%27%20x2%3D%2760%27%20y2%3D%2736%27/%3E%0A%20%20%3Cline%20x1%3D%2785%27%20y1%3D%2711%27%20x2%3D%2788%27%20y2%3D%278%27/%3E%0A%3C/g%3E%0A%3C%21--%20teru%20teru%20bozu%20--%3E%0A%3Cpath%20d%3D%27M48%2018c-14%200-22%2010-22%2022%200%208%203%2015%209%2020l-7%2020h40l-7-20c6-5%209-12%209-20%200-12-8-22-22-22z%27%20fill%3D%27url%28%23g%29%27%20stroke%3D%27%23d9deee%27%20stroke-width%3D%272%27/%3E%0A%3Cpath%20d%3D%27M30%2058h36%27%20stroke%3D%27%23d9deee%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27/%3E%0A%3Ccircle%20cx%3D%2740%27%20cy%3D%2740%27%20r%3D%273%27%20fill%3D%27%23101322%27/%3E%0A%3Ccircle%20cx%3D%2756%27%20cy%3D%2740%27%20r%3D%273%27%20fill%3D%27%23101322%27/%3E%0A%3Cpath%20d%3D%27M42%2048c2%202%2010%202%2012%200%27%20stroke%3D%27%23101322%27%20stroke-width%3D%272%27%20fill%3D%27none%27%20stroke-linecap%3D%27round%27/%3E%0A%3Cpath%20d%3D%27M48%2060c0%200-6%207-10%2010%27%20stroke%3D%27%23c9cfe6%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27/%3E%0A%3Cpath%20d%3D%27M48%2060c0%200%206%207%2010%2010%27%20stroke%3D%27%23c9cfe6%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27/%3E%0A%3C/svg%3E"
 };
 
+// ===== 翻页导航（主页 -> 建议 -> 对话）=====
+const pagesEl = document.getElementById("pages");
+let 当前页 = 0; // 0=主页,1=建议,2=对话
+
+function 跳转到页(i){
+  当前页 = Math.max(0, Math.min(2, i));
+  if (pagesEl) pagesEl.style.transform = `translateX(-${当前页*100}%)`;
+}
+
+// 主页五芒星 -> 建议页
+const toAdviceBtn = document.getElementById("toAdvice");
+if (toAdviceBtn) toAdviceBtn.addEventListener("click", () => 跳转到页(1));
+
+// 建议页右上角头像 -> 对话页
+const toChatBtn = document.getElementById("toChat");
+if (toChatBtn) toChatBtn.addEventListener("click", () => 跳转到页(2));
+
+// 返回按钮
+const backHome1 = document.getElementById("backHome1");
+if (backHome1) backHome1.addEventListener("click", () => 跳转到页(0));
+
+const backAdvice = document.getElementById("backAdvice");
+if (backAdvice) backAdvice.addEventListener("click", () => 跳转到页(1));
+
+// 头像注入
+const avatarBig = document.getElementById("sunnieAvatar");
+const avatarSmall = document.getElementById("sunnieAvatarSmall");
+if (avatarBig) avatarBig.src = SUNNIE.头像;
+if (avatarSmall) avatarSmall.src = SUNNIE.头像;
+
+
 // 雷达图维度（更大字体 + Emoji）
 const 维度 = ["🏃‍♀️ 耐力", "💥 爆发力", "❤️ 亲密欲望", "🫶 舒适度", "🧠 专注"];
 
@@ -62,7 +93,7 @@ const MODEL = {
     }
   },
   aiAgent: {
-    mode: "mock",           // "mock" | "fetch" | "window"
+    mode: "fetch",           // "mock" | "fetch" | "window"
     endpoint: "/api/agent",
     windowObjectName: "PeriodAgent",
     timeoutMs: 12000,
@@ -230,6 +261,15 @@ function 渲染建议(cards) {
 }
 
 // ===== 雷达图（0–100，隐藏数字）=====
+
+function 更新雷达标签字号(chart){
+  if (!chart) return;
+  const w = window.innerWidth || 1000;
+  const size = w < 420 ? 13 : (w < 720 ? 14 : 16);
+  chart.options.scales.r.pointLabels.font.size = size;
+  chart.update();
+}
+
 function 创建雷达图(ctx) {
   return new Chart(ctx, {
     type: "radar",
@@ -244,6 +284,7 @@ function 创建雷达图(ctx) {
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       scales: {
         r: {
           min: 0,
@@ -338,7 +379,7 @@ async function callAIAgent(message, context) {
       });
       if (!res.ok) return `接口错误：HTTP ${res.status}`;
       const data = await res.json();
-      return data.reply ?? "接口返回缺少 reply 字段";
+      return data.reply ?? data.message ?? data.text ?? data.answer ?? "接口返回缺少 reply/message/text/answer 字段";
     } catch (e) {
       return `接口调用失败：${String(e)}`;
     } finally {
@@ -359,6 +400,8 @@ const dayOffset = document.getElementById("dayOffset");
 const rangeLabel = document.getElementById("rangeLabel");
 
 const radar = 创建雷达图(document.getElementById("radar"));
+更新雷达标签字号(radar);
+window.addEventListener("resize", () => 更新雷达标签字号(radar));
 
 let 最新结果 = null;
 
@@ -460,3 +503,50 @@ chatInput.addEventListener("keydown", (e) => {
 更新范围标签();
 更新();
 appendMsg("bot", `你好，我是 ${SUNNIE.名字} ☀️ 你可以用上方滑块查看今天前后 3 天的能量回顾/预测，也可以问我：那一天运动/工作/休息/亲密怎么安排更合适？`);
+
+
+// ===== PWA：注册 Service Worker + 安装按钮 =====
+(function 启动PWA(){
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./sw.js").catch(() => {});
+    });
+  }
+
+  const installCard = document.getElementById("installCard");
+  const installBtn = document.getElementById("installBtn");
+
+  let deferredPrompt = null;
+
+  window.addEventListener("beforeinstallprompt", (e) => {
+    // Chrome/Edge/Android 支持
+    e.preventDefault();
+    deferredPrompt = e;
+    if (installCard) installCard.hidden = false;
+  });
+
+  if (installBtn) {
+    installBtn.addEventListener("click", async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      try { await deferredPrompt.userChoice; } catch {}
+      deferredPrompt = null;
+      if (installCard) installCard.hidden = true;
+    });
+  }
+
+  // iOS Safari 没有 beforeinstallprompt：给一个温和提示
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
+  if (isIOS && !isStandalone && installCard) {
+    installCard.hidden = false;
+    const sub = installCard.querySelector(".installSub");
+    if (sub) sub.textContent = "iPhone/iPad：在 Safari 点“分享”→“添加到主屏幕”，即可像 App 一样使用。";
+    const btn = installCard.querySelector("#installBtn");
+    if (btn) { btn.textContent = "知道了"; btn.onclick = () => installCard.hidden = true; }
+  }
+})();
+
+
+// 初始显示主页
+跳转到页(0);
