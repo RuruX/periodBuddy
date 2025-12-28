@@ -1,157 +1,790 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>经日天气晴</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>月经周期追踪器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-  <meta name="theme-color" content="#2b6de9" />
-  <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+        body {
+            font-family: 'jf-openhuninn-2.1', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
 
-  <link rel="stylesheet" href="styles.css" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+        .app-container {
+            width: 100%;
+            max-width: 375px;
+            height: 812px;
+            position: relative;
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        /* 背景渐变效果 - 保持与index3.html一致 */
+        .background {
+            position: absolute;
+            left: -459px;
+            top: -289px;
+            width: 834px;
+            height: 1101px;
+            pointer-events: none;
+        }
+
+        .bg-ellipse {
+            position: absolute;
+            border-radius: 50%;
+        }
+
+        .bg-ellipse-1 {
+            left: 575px;
+            top: 624px;
+            width: 518px;
+            height: 517px;
+            background: radial-gradient(circle, rgba(255, 180, 150, 0.6) 0%, rgba(255, 180, 150, 0) 70%);
+            filter: blur(80px);
+        }
+
+        .bg-ellipse-2 {
+            left: 316px;
+            top: 819px;
+            width: 364px;
+            height: 364px;
+            background: radial-gradient(circle, rgba(255, 165, 180, 0.5) 0%, rgba(255, 165, 180, 0) 70%);
+            filter: blur(60px);
+        }
+
+        .bg-ellipse-3 {
+            left: 305px;
+            top: 258px;
+            width: 561px;
+            height: 561px;
+            background: radial-gradient(circle, rgba(230, 180, 255, 0.5) 0%, rgba(230, 180, 255, 0) 70%);
+            filter: blur(90px);
+        }
+
+        .bg-ellipse-4 {
+            left: 689px;
+            top: 238px;
+            width: 209px;
+            height: 209px;
+            background: radial-gradient(circle, rgba(200, 180, 255, 0.4) 0%, rgba(200, 180, 255, 0) 70%);
+            filter: blur(40px);
+        }
+
+        .bg-ellipse-5 {
+            left: 761px;
+            top: 731px;
+            width: 126px;
+            height: 126px;
+            background: radial-gradient(circle, rgba(180, 210, 255, 0.3) 0%, rgba(180, 210, 255, 0) 70%);
+            filter: blur(30px);
+        }
+
+        .bg-ellipse-6 {
+            left: 588px;
+            top: 731px;
+            width: 209px;
+            height: 262px;
+            background: radial-gradient(ellipse, rgba(255, 182, 193, 0.4) 0%, rgba(255, 182, 193, 0) 70%);
+            filter: blur(50px);
+        }
+
+        .bg-blur {
+            position: absolute;
+            backdrop-filter: blur(45.15px);
+            background: rgba(255, 255, 255, 0.6);
+            mix-blend-mode: luminosity;
+            height: 812px;
+            left: 459px;
+            top: 289px;
+            width: 375px;
+        }
+
+        /* 状态栏 */
+        .status-bar {
+            position: absolute;
+            height: 44px;
+            left: 0;
+            right: 0;
+            top: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 21px;
+            z-index: 100;
+        }
+
+        .time {
+            font-size: 15px;
+            font-weight: 600;
+            color: black;
+        }
+
+        .status-icons {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        /* 返回按钮 */
+        .back-button {
+            position: absolute;
+            left: 12px;
+            top: 56px;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            z-index: 100;
+            background: none;
+            border: none;
+            padding: 0;
+            color: white;
+            font-size: 24px;
+            line-height: 1;
+        }
+
+        /* 页面容器 */
+        .page {
+            position: absolute;
+            inset: 0;
+            display: none;
+            flex-direction: column;
+            padding: 0 12px;
+        }
+
+        .page.active {
+            display: flex;
+        }
+
+        /* 标题 */
+        .page-title {
+            margin-top: 116px;
+            margin-bottom: 20px;
+            z-index: 10;
+        }
+
+        .page-title h1 {
+            font-size: 24px;
+            font-weight: 400;
+            color: white;
+            line-height: 1.3;
+            margin: 0;
+        }
+
+        /* 日历样式 */
+        .calendar-container {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0px 1px 4px 0px rgba(0, 0, 0, 0.12);
+            z-index: 10;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .calendar-header h2 {
+            font-size: 16px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .calendar-nav {
+            display: flex;
+            gap: 15px;
+        }
+
+        .calendar-nav button {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 5px;
+            color: #333;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+
+        .calendar-day-header {
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            padding: 5px;
+            font-weight: 500;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            color: #333;
+            background: transparent;
+            border: none;
+        }
+
+        .calendar-day:hover {
+            background: #f0f0f0;
+        }
+
+        .calendar-day.selected {
+            background: #FF6B9D;
+            color: white;
+        }
+
+        .calendar-day.empty {
+            cursor: default;
+        }
+
+        /* 周期选择器 */
+        .cycle-wrapper {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            position: relative;
+            margin-top: 20px;
+            margin-bottom: 80px;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+            overscroll-behavior: contain;
+        }
+
+        .cycle-wrapper::-webkit-scrollbar {
+            display: none;
+        }
+
+        .cycle-container {
+            width: 100%;
+            padding-top: calc(50% - 25.5px);
+            padding-bottom: calc(50% - 25.5px);
+        }
+
+        .cycle-option {
+            height: 51px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 24px;
+            color: #8E8E93;
+            width: 100%;
+            font-weight: 400;
+            scroll-snap-align: center;
+            scroll-snap-stop: always;
+        }
+
+        .cycle-option.center {
+            background: white;
+            color: #333;
+        }
+
+        .cycle-option.near {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        /* 确认信息卡片 */
+        .confirm-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 30px 20px;
+            margin-top: 50px;
+            box-shadow: 0px 1px 4px 0px rgba(0, 0, 0, 0.12);
+            z-index: 10;
+            max-width: 100%;
+        }
+
+        .confirm-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .confirm-item:last-child {
+            border-bottom: none;
+        }
+
+        .confirm-label {
+            font-size: 16px;
+            color: #666;
+            font-weight: 400;
+        }
+
+        .confirm-value {
+            font-size: 18px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        /* 下一步按钮 */
+        .next-button {
+            position: absolute;
+            bottom: 64px;
+            left: 10px;
+            right: 10px;
+            background: white;
+            border: none;
+            border-radius: 40px;
+            padding: 10px 20px;
+            font-size: 20px;
+            font-weight: 400;
+            cursor: pointer;
+            box-shadow: 0px 1px 4px 0px rgba(0, 0, 0, 0.12);
+            transition: all 0.3s;
+            color: #333;
+            z-index: 100;
+        }
+
+        .next-button:hover {
+            transform: scale(1.02);
+            box-shadow: 0px 2px 8px 0px rgba(0, 0, 0, 0.15);
+        }
+
+        /* 底部指示器 */
+        .bottom-indicator {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 2px;
+            background: black;
+            border-radius: 100px;
+            z-index: 100;
+        }
+    </style>
 </head>
-
 <body>
-  <div class="wrap">
-
-    <header class="header">
-      <div class="title">
-        <h1>经日天气晴</h1>
-        <p class="sub">经期能量雷达｜每日建议卡片｜和 Sunnie 对话</p>
-      </div>
-      <div class="badge">仅供参考 · 非医疗建议</div>
-    </header>
-
-    <!-- PWA 安装提示（由 app.js 控制显示） -->
-    <section class="card installCard" id="installCard" hidden>
-      <div class="installRow">
-        <div>
-          <div class="installTitle">安装到桌面（PWA）</div>
-          <div class="installSub">安装后会像 App 一样全屏打开，并支持离线访问。</div>
+    <div class="app-container">
+        <!-- 背景层 -->
+        <div class="background">
+            <div class="bg-ellipse bg-ellipse-1"></div>
+            <div class="bg-ellipse bg-ellipse-2"></div>
+            <div class="bg-ellipse bg-ellipse-3"></div>
+            <div class="bg-ellipse bg-ellipse-4"></div>
+            <div class="bg-ellipse bg-ellipse-5"></div>
+            <div class="bg-ellipse bg-ellipse-6"></div>
         </div>
-        <button id="installBtn" class="installBtn">安装</button>
-      </div>
-    </section>
+        <div class="bg-blur"></div>
 
-    <!-- 翻页容器：3 页（主页 -> 建议 -> 对话） -->
-    <main class="pager" aria-label="翻页容器">
-      <div class="pages" id="pages">
-
-        <!-- Page 1: 主页（输入 + 雷达图） -->
-        <section class="page" aria-label="主页">
-          <section class="card">
-            <h2>输入</h2>
-            <div class="grid">
-              <label>
-                上次月经第一天
-                <input id="lastStart" type="date" />
-              </label>
-
-              <label>
-                经期持续（天，3–8）
-                <input id="periodLen" type="number" min="3" max="8" value="5" />
-              </label>
-
-              <label>
-                平均周期（天，28–35）
-                <input id="cycleLen" type="number" min="28" max="35" value="30" />
-              </label>
-
-              <button id="btn">计算</button>
+        <!-- 状态栏 -->
+        <div class="status-bar">
+            <span class="time">9:41</span>
+            <div class="status-icons">
+                <svg width="20" height="14" viewBox="0 0 20 14" fill="none">
+                    <rect x="11" y="4" width="3" height="6" rx="0.5" fill="black"/>
+                    <rect x="6.5" y="6" width="3" height="4" rx="0.5" fill="black"/>
+                    <rect x="2" y="7.5" width="3" height="2.5" rx="0.5" fill="black"/>
+                </svg>
+                <svg width="16" height="14" viewBox="0 0 16 14" fill="none">
+                    <path d="M7.5 9C7.77614 9 8 9.22386 8 9.5V10C8 10.2761 7.77614 10.5 7.5 10.5C7.22386 10.5 7 10.2761 7 10V9.5C7 9.22386 7.22386 9 7.5 9Z" fill="black"/>
+                </svg>
+                <svg width="25" height="14" viewBox="0 0 25 14" fill="none">
+                    <rect x="24" y="5" width="1" height="4" rx="0.5" fill="black"/>
+                    <rect x="1" y="1" width="21" height="10" rx="2" stroke="black" stroke-width="1"/>
+                    <rect x="2" y="3" width="19" height="8" rx="1" fill="black"/>
+                </svg>
             </div>
+        </div>
 
-            <div class="row">
-              <div class="chartBox">
-                <div class="rangeBar">
-                  <div class="rangeLeft">
-                    <div class="rangeTitle">能量回顾 / 预测</div>
-                    <div class="rangeSub" id="rangeLabel">-</div>
-                  </div>
-                  <input id="dayOffset" class="slider" type="range" min="-3" max="3" value="0" step="1" />
+        <!-- 返回按钮 -->
+        <button class="back-button" onclick="goBack()">‹</button>
+
+        <!-- 页面1: 日历选择 -->
+        <div id="page1" class="page active">
+            <div class="page-title">
+                <h1>轻触记录</h1>
+                <h1>上次月经开始日期：</h1>
+            </div>
+            
+            <div class="calendar-container">
+                <div class="calendar-header">
+                    <h2 id="currentMonth">2025年12月</h2>
+                    <div class="calendar-nav">
+                        <button onclick="previousMonth()">‹</button>
+                        <button onclick="nextMonth()">›</button>
+                    </div>
                 </div>
-
-                <!-- 五芒星翻页按钮：去“每日建议卡片” -->
-                <button id="toAdvice" class="fabStar" aria-label="翻页到每日建议卡片" title="查看每日建议">
-                  ★
-                </button>
-
-                <canvas id="radar" height="320"></canvas>
-                <div class="hint">说明：雷达图范围 0–100；界面不显示刻度数字与悬浮提示数字。</div>
-              </div>
-
-              <div class="meta">
-                <div class="kv"><span>所选日期：</span><b id="chosenDate">-</b></div>
-                <div class="kv"><span>周期第</span><b id="dayInCycle">-</b><span>天</span></div>
-                <div class="kv"><span>阶段：</span><b id="phase">-</b></div>
-              </div>
-            </div>
-          </section>
-        </section>
-
-        <!-- Page 2: 每日建议卡片 -->
-        <section class="page" aria-label="每日建议">
-          <section class="card">
-            <div class="pageTop">
-              <button class="backBtn" id="backHome1" aria-label="返回主页">← 返回</button>
-
-              <div class="pageTopTitle">
-                <h2>每日建议卡片</h2>
-                <p class="sub">点击右上角 Sunnie（晴天娃娃）头像 → 翻页到对话框</p>
-              </div>
-
-              <!-- 点击头像翻到 Sunnie 对话 -->
-              <button id="toChat" class="avatarBtn" aria-label="翻页到 Sunnie 对话" title="和 Sunnie 聊聊">
-                <img id="sunnieAvatar" alt="Sunnie 头像（晴天娃娃）" />
-              </button>
+                <div class="calendar-grid" id="calendar"></div>
             </div>
 
-            <div class="cards" id="adviceCards"></div>
-          </section>
-        </section>
+            <button class="next-button" onclick="goToPage2()">下一步</button>
+        </div>
 
-        <!-- Page 3: Sunnie 对话 -->
-        <section class="page" aria-label="Sunnie 对话">
-          <section class="card">
-            <div class="pageTop">
-              <button class="backBtn" id="backAdvice" aria-label="返回建议卡片">← 返回</button>
-
-              <div class="pageTopTitle">
-                <h2>Sunnie 对话</h2>
-                <p class="sub">默认本地 Mock，可在 <code>app.js</code> 配置接入真实 AI agent</p>
-              </div>
-
-              <div class="pageTopRight">
-                <img class="avatarSmall" id="sunnieAvatarSmall" alt="Sunnie 头像（晴天娃娃）" />
-              </div>
+        <!-- 页面2: 周期长度选择 -->
+        <div id="page2" class="page">
+            <div class="page-title">
+                <h1>选择你的</h1>
+                <h1>月经周期长度：</h1>
+            </div>
+            
+            <div class="cycle-wrapper" id="cycleWrapper">
+                <div class="cycle-container" id="cycleContainer"></div>
             </div>
 
-            <div class="chat">
-              <div id="chatLog" class="chatLog" aria-label="聊天记录"></div>
+            <button class="next-button" onclick="goToPage3()">下一步</button>
+        </div>
 
-              <div class="chatBar">
-                <textarea id="chatInput" rows="2" placeholder="例如：那一天适合做力量训练吗？工作怎么安排更舒服？（⌘/Ctrl + Enter 发送）"></textarea>
-                <button id="chatSend">发送</button>
-              </div>
-
-              <div class="chatHint">
-                接口约定示例：
-                <code>POST /api/agent</code>，body: <code>{message, context}</code>，返回：<code>{reply}</code>
-              </div>
+        <!-- 页面3: 完成登记 -->
+        <div id="page3" class="page">
+            <div class="page-title">
+                <h1>完成登记</h1>
             </div>
-          </section>
-        </section>
+            
+            <div class="confirm-card" id="confirmCard">
+                <div class="confirm-item">
+                    <span class="confirm-label">上次月经开始日期</span>
+                    <span class="confirm-value" id="confirmDate">-</span>
+                </div>
+                <div class="confirm-item">
+                    <span class="confirm-label">月经周期长度</span>
+                    <span class="confirm-value" id="confirmCycle">-</span>
+                </div>
+            </div>
 
-      </div>
-    </main>
+            <button class="next-button" onclick="complete()">完成</button>
+        </div>
 
-    <footer class="footer">
-      <div>提示：这是网页版 App（PWA）。可安装到桌面/主屏幕；离线可用。</div>
-    </footer>
+        <!-- 底部指示器 -->
+        <div class="bottom-indicator"></div>
+    </div>
 
-  </div>
+    <script>
+        // 全局状态
+        let currentPage = 1;
+        let selectedDate = null;
+        let selectedCycle = null;
+        let currentMonth = new Date(2025, 11, 1); // 2025年12月
 
-  <script src="app.js"></script>
+        // 页面导航
+        function goToPage1() {
+            currentPage = 1;
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('page1').classList.add('active');
+        }
+
+        function goToPage2() {
+            if (!selectedDate) {
+                alert('请选择日期');
+                return;
+            }
+            currentPage = 2;
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('page2').classList.add('active');
+            
+            // 初始化滚动选择器
+            setTimeout(() => {
+                initCycleScroller();
+            }, 100);
+        }
+
+        function goToPage3() {
+            if (!selectedCycle) {
+                alert('请选择月经周期长度');
+                return;
+            }
+            currentPage = 3;
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('page3').classList.add('active');
+            
+            // 更新确认信息
+            updateConfirmInfo();
+        }
+        
+        function updateConfirmInfo() {
+            const dateElement = document.getElementById('confirmDate');
+            const cycleElement = document.getElementById('confirmCycle');
+            
+            if (selectedDate) {
+                const year = selectedDate.getFullYear();
+                const month = selectedDate.getMonth() + 1;
+                const day = selectedDate.getDate();
+                dateElement.textContent = `${year}年${month}月${day}日`;
+            } else {
+                dateElement.textContent = '-';
+            }
+            
+            if (selectedCycle) {
+                cycleElement.textContent = `${selectedCycle}天`;
+            } else {
+                cycleElement.textContent = '-';
+            }
+        }
+
+        function goBack() {
+            if (currentPage === 1) {
+                alert('返回上一页');
+            } else if (currentPage === 2) {
+                goToPage1();
+            } else if (currentPage === 3) {
+                goToPage2();
+            }
+        }
+
+        function complete() {
+            // 这里可以添加提交数据到后端的逻辑
+            // 例如：fetch('/api/save-cycle', { method: 'POST', body: JSON.stringify({ date: selectedDate, cycle: selectedCycle }) })
+            
+            // 跳转到index2.html
+            window.location.href = 'index2.html';
+        }
+
+        // 日历功能
+        function renderCalendar() {
+            const calendar = document.getElementById('calendar');
+            calendar.innerHTML = '';
+
+            const year = currentMonth.getFullYear();
+            const month = currentMonth.getMonth();
+            document.getElementById('currentMonth').textContent = `${year}年${month + 1}月`;
+
+            const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+            weekDays.forEach(day => {
+                const dayHeader = document.createElement('div');
+                dayHeader.className = 'calendar-day-header';
+                dayHeader.textContent = day;
+                calendar.appendChild(dayHeader);
+            });
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            for (let i = 0; i < firstDay; i++) {
+                const emptyDay = document.createElement('button');
+                emptyDay.className = 'calendar-day empty';
+                emptyDay.disabled = true;
+                calendar.appendChild(emptyDay);
+            }
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayElement = document.createElement('button');
+                dayElement.className = 'calendar-day';
+                dayElement.textContent = day;
+                const dateValue = new Date(year, month, day);
+                
+                dayElement.addEventListener('click', function() {
+                    document.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('selected'));
+                    this.classList.add('selected');
+                    selectedDate = dateValue;
+                });
+                
+                calendar.appendChild(dayElement);
+            }
+        }
+
+        function previousMonth() {
+            currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1);
+            renderCalendar();
+        }
+
+        function nextMonth() {
+            currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1);
+            renderCalendar();
+        }
+
+        // 周期选择器功能
+        function initCycleOptions() {
+            const container = document.getElementById('cycleContainer');
+            container.innerHTML = '';
+            
+            for (let days = 20; days <= 37; days++) {
+                const option = document.createElement('button');
+                option.className = 'cycle-option';
+                option.textContent = `${days}天`;
+                option.dataset.days = days;
+                container.appendChild(option);
+            }
+        }
+
+        function initCycleScroller() {
+            const wrapper = document.getElementById('cycleWrapper');
+            const options = document.querySelectorAll('.cycle-option');
+            let isScrolling = false;
+            let scrollTimeout;
+            let lastScrollTop = 0;
+            let scrollVelocity = 0;
+            
+            function updateCenterOption() {
+                const wrapperRect = wrapper.getBoundingClientRect();
+                const centerY = wrapperRect.top + wrapperRect.height / 2;
+                
+                let closestOption = null;
+                let closestIndex = -1;
+                let minDistance = Infinity;
+                
+                options.forEach((option, index) => {
+                    const rect = option.getBoundingClientRect();
+                    const optionCenterY = rect.top + rect.height / 2;
+                    const distance = Math.abs(centerY - optionCenterY);
+                    
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        closestOption = option;
+                        closestIndex = index;
+                    }
+                    
+                    option.classList.remove('center', 'near');
+                });
+                
+                if (closestOption) {
+                    closestOption.classList.add('center');
+                    selectedCycle = closestOption.dataset.days;
+                    
+                    if (closestIndex > 0) {
+                        options[closestIndex - 1].classList.add('near');
+                    }
+                    if (closestIndex < options.length - 1) {
+                        options[closestIndex + 1].classList.add('near');
+                    }
+                }
+            }
+            
+            function snapToNearest() {
+                if (isScrolling) return;
+                
+                const wrapperRect = wrapper.getBoundingClientRect();
+                const centerY = wrapperRect.top + wrapperRect.height / 2;
+                
+                let closestOption = null;
+                let closestIndex = -1;
+                let minDistance = Infinity;
+                
+                options.forEach((option, index) => {
+                    const rect = option.getBoundingClientRect();
+                    const optionCenterY = rect.top + rect.height / 2;
+                    const distance = Math.abs(centerY - optionCenterY);
+                    
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        closestOption = option;
+                        closestIndex = index;
+                    }
+                });
+                
+                if (closestOption && minDistance > 5) {
+                    isScrolling = true;
+                    const optionTop = closestIndex * 51;
+                    const wrapperHeight = wrapper.clientHeight;
+                    const targetScroll = optionTop - wrapperHeight / 2 + 25.5;
+                    
+                    wrapper.scrollTo({
+                        top: targetScroll,
+                        behavior: 'smooth'
+                    });
+                    
+                    setTimeout(() => {
+                        isScrolling = false;
+                        updateCenterOption();
+                    }, 300);
+                } else {
+                    updateCenterOption();
+                }
+            }
+            
+            // 滚动事件处理
+            wrapper.addEventListener('scroll', () => {
+                const currentScrollTop = wrapper.scrollTop;
+                scrollVelocity = Math.abs(currentScrollTop - lastScrollTop);
+                lastScrollTop = currentScrollTop;
+                
+                updateCenterOption();
+                
+                // 清除之前的定时器
+                clearTimeout(scrollTimeout);
+                
+                // 检测滚动停止
+                scrollTimeout = setTimeout(() => {
+                    if (scrollVelocity < 1) {
+                        snapToNearest();
+                    }
+                }, 150);
+            }, { passive: true });
+            
+            // 触摸事件处理（移动端）
+            let touchStartY = 0;
+            let touchStartTime = 0;
+            
+            wrapper.addEventListener('touchstart', (e) => {
+                touchStartY = e.touches[0].clientY;
+                touchStartTime = Date.now();
+                isScrolling = false;
+            }, { passive: true });
+            
+            wrapper.addEventListener('touchend', () => {
+                const touchDuration = Date.now() - touchStartTime;
+                if (touchDuration < 200) {
+                    setTimeout(() => {
+                        snapToNearest();
+                    }, 100);
+                } else {
+                    setTimeout(() => {
+                        snapToNearest();
+                    }, 200);
+                }
+            }, { passive: true });
+            
+            // 点击选项时滚动到该位置
+            options.forEach((option, index) => {
+                option.addEventListener('click', function() {
+                    isScrolling = true;
+                    const optionTop = index * 51;
+                    const wrapperHeight = wrapper.clientHeight;
+                    
+                    wrapper.scrollTo({
+                        top: optionTop - wrapperHeight / 2 + 25.5,
+                        behavior: 'smooth'
+                    });
+                    
+                    setTimeout(() => {
+                        isScrolling = false;
+                        updateCenterOption();
+                    }, 300);
+                });
+            });
+            
+            // 初始滚动到28天（索引8）
+            setTimeout(() => {
+                const index = 8;
+                const optionTop = index * 51;
+                const wrapperHeight = wrapper.clientHeight;
+                wrapper.scrollTop = optionTop - wrapperHeight / 2 + 25.5;
+                updateCenterOption();
+            }, 100);
+        }
+
+        // 初始化
+        renderCalendar();
+        initCycleOptions();
+    </script>
 </body>
 </html>

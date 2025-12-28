@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>今日五芒星 - 月经周期追踪器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 375px;
+            min-height: 100vh;
+            background: white;
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 背景装饰 - 参考index3.html */
+        .background-decoration {
+            position: absolute;
+            left: -191px;
+            top: -212px;
+            width: 834px;
+            height: 1396px;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .blur-overlay {
+            position: absolute;
+            left: 191px;
+            top: 212px;
+            width: 375px;
+            height: calc(100vh);
+            backdrop-filter: blur(45.15px);
+            background: rgba(255, 255, 255, 0.6);
+            mix-blend-mode: luminosity;
+        }
+
+        /* 状态栏 */
+        .status-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 44px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 14px;
+            z-index: 10;
+        }
+
+        .time {
+            margin-left: 7px;
+            margin-top: 12px;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .status-icons {
+            display: flex;
+            gap: 4px;
+            margin-top: 16px;
+        }
+
+        /* 主内容区域 */
+        .main-content {
+            position: relative;
+            z-index: 1;
+            padding: 60px 12px 60px;
+        }
+
+        /* 标题区域 */
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            position: relative;
+            padding-top: 20px;
+        }
+
+        .star-decoration {
+            position: absolute;
+            left: 50%;
+            top: -12px;
+            transform: translateX(-50%);
+            width: 87px;
+            height: 87px;
+            z-index: 1;
+        }
+
+        .star-decoration img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .title {
+            font-size: 32px;
+            font-weight: bold;
+            color: #ff582f;
+            transform: rotate(7.894deg);
+            margin-top: 8px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .title-underline {
+            width: 160px;
+            height: 2px;
+            background: #ff582f;
+            margin: 5px auto 0;
+            transform: rotate(8.282deg);
+        }
+
+        /* 日期导航 */
+        .date-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 30px 0 20px;
+            gap: 20px;
+        }
+
+        .nav-button {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            background: linear-gradient(to right, #ffabac, #ff7a45);
+            color: white;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .nav-button:hover {
+            transform: scale(1.05);
+        }
+
+        .nav-button:active {
+            transform: scale(0.95);
+        }
+
+        .nav-button.next {
+            background: linear-gradient(to right, #ff7a45, #ffabac);
+        }
+
+        .current-date {
+            font-size: 18px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        /* 五芒星图表区域 */
+        .star-chart-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            margin: 20px 0;
+        }
+
+        .star-chart {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 240px;
+            height: 240px;
+        }
+
+        .star-background {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.4) 60%, transparent 100%);
+            border-radius: 50%;
+            box-shadow: 0 4px 20px rgba(255, 122, 69, 0.15);
+        }
+
+        .star-svg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        #starPolygonContainer {
+            filter: drop-shadow(0 4px 10px rgba(255, 122, 69, 0.2));
+        }
+
+        #starPolygonContainer:hover {
+            filter: drop-shadow(0 6px 15px rgba(255, 122, 69, 0.4));
+        }
+
+        /* 五芒星标签 */
+        .star-labels {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .label {
+            position: absolute;
+            font-size: 14px;
+            color: #333;
+            white-space: nowrap;
+            font-weight: 400;
+            line-height: 1.3;
+            margin: 0;
+            font-family: 'jf-openhuninn-2.1', sans-serif;
+        }
+
+        /* 耐力 - 顶部 */
+        .label-top {
+            top: -28px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        /* 爆发力 - 右上 */
+        .label-right-top {
+            top: 45px;
+            right: -60px;
+        }
+
+        /* 亲密欲望 - 右下 */
+        .label-right-bottom {
+            bottom: 30px;
+            right: -58px;
+        }
+
+        /* 舒适度 - 左下 */
+        .label-left-bottom {
+            bottom: 30px;
+            left: -58px;
+        }
+
+        /* 专注度 - 左上 */
+        .label-left-top {
+            top: 45px;
+            left: -62px;
+        }
+
+        /* 卡片区域 */
+        .info-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-top: 40px;
+        }
+
+        .info-card {
+            /* 使用Figma设计的背景 (24:163) */
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid white;
+            border-radius: 35px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-background {
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid white;
+            border-radius: 35px;
+            backdrop-filter: blur(10px);
+        }
+
+        .card-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .phase-label {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+            display: inline-block;
+        }
+
+        .strength-indicator {
+            font-size: 28px;
+            font-weight: bold;
+            color: #ff8162;
+            transform: rotate(-10deg);
+            display: inline-block;
+            margin-left: 8px;
+        }
+
+        .phase-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .card-description {
+            font-size: 14px;
+            color: #333;
+            line-height: 1.6;
+            max-width: 180px;
+        }
+
+        .card-illustration {
+            position: absolute;
+            right: 20px;
+            bottom: 10px;
+            width: 136px;
+            height: 172px;
+            pointer-events: none;
+        }
+
+        .card-illustration img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        /* 聊天按钮组 */
+        [data-node-id="75:391"] {
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        [data-node-id="75:391"]:hover {
+            transform: scale(1.05);
+        }
+
+        [data-node-id="75:391"]:active {
+            transform: scale(0.95);
+        }
+
+        /* 聊天气泡悬停效果 */
+        [data-node-id="75:390"] {
+            transition: all 0.3s ease;
+        }
+
+        [data-node-id="75:391"]:hover [data-node-id="75:390"] {
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Sunnie头像动画 */
+        [data-node-id="75:385"] {
+            transition: transform 0.3s ease;
+        }
+
+        [data-node-id="75:391"]:hover [data-node-id="75:385"] {
+            transform: scale(1.1);
+        }
+
+        /* 底部导航栏 */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 375px;
+            height: 49px;
+            backdrop-filter: blur(15px);
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .home-indicator {
+            width: 40px;
+            height: 2px;
+            background: black;
+            border-radius: 100px;
+            margin-bottom: 15px;
+        }
+
+        /* 响应式 */
+        @media (max-width: 375px) {
+            .container {
+                border-radius: 0;
+            }
+        }
+
+        /* 动画 */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .info-card {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .info-card:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .info-card:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        /* SVG 动画 */
+        .star-path {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .star-path:hover {
+            filter: drop-shadow(0 0 8px rgba(255, 122, 69, 0.6));
+        }
+
+        /* 标题动画 */
+        @keyframes titleFloat {
+            0%, 100% {
+                transform: rotate(7.894deg) translateY(0px);
+            }
+            50% {
+                transform: rotate(7.894deg) translateY(-5px);
+            }
+        }
+
+        .title {
+            animation: titleFloat 3s ease-in-out infinite;
+        }
+
+        /* 星星旋转动画 */
+        @keyframes starRotate {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .star-decoration img {
+            animation: starRotate 20s linear infinite;
+        }
+
+        /* 卡片悬停效果 */
+        .info-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .info-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(255, 122, 69, 0.2);
+        }
+
+        /* 聊天按钮脉冲动画 */
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        [data-node-id="75:388"] {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        /* 导航按钮波纹效果 */
+        .nav-button {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .nav-button:active::before {
+            width: 200px;
+            height: 200px;
+        }
+
+        /* 加载动画 */
+        @keyframes shimmer {
+            0% {
+                background-position: -1000px 0;
+            }
+            100% {
+                background-position: 1000px 0;
+            }
+        }
+
+        .loading {
+            background: linear-gradient(90deg, 
+                rgba(255, 255, 255, 0) 0%, 
+                rgba(255, 255, 255, 0.6) 50%, 
+                rgba(255, 255, 255, 0) 100%);
+            background-size: 1000px 100%;
+            animation: shimmer 2s infinite;
+        }
+
+        /* 工具提示 */
+        .tooltip {
+            position: fixed;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 12px;
+            z-index: 1000;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .tooltip.show {
+            opacity: 1;
+        }
+
+        /* 页面加载遮罩 */
+        .page-loader {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, #ffabac 0%, #ff7a45 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+
+        .page-loader.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loader-star {
+            width: 80px;
+            height: 80px;
+            animation: starRotate 2s linear infinite;
+        }
+
+        .loader-text {
+            color: white;
+            font-size: 18px;
+            margin-top: 20px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <!-- 页面加载器 -->
+    <div class="page-loader" id="pageLoader">
+        <img class="loader-star" src="https://www.figma.com/api/mcp/asset/97eeb891-6151-4980-92ea-7f6e6359c739" alt="加载中">
+        <div class="loader-text">加载中...</div>
+    </div>
+
+    <!-- 工具提示 -->
+    <div class="tooltip" id="tooltip"></div>
+
+    <div class="container">
+        <!-- 背景装饰 -->
+        <div class="background-decoration">
+            <!-- 彩色椭圆背景装饰 -->
+            <svg style="position: absolute; width: 100%; height: 100%;" viewBox="0 0 834 1396" fill="none">
+                <!-- 粉红色椭圆 -->
+                <ellipse cx="250" cy="200" rx="200" ry="180" fill="#FFD4E5" opacity="0.4"/>
+                <ellipse cx="400" cy="300" rx="150" ry="150" fill="#FFE0F0" opacity="0.3"/>
+                
+                <!-- 橙色椭圆 -->
+                <ellipse cx="150" cy="400" rx="180" ry="200" fill="#FFB8A0" opacity="0.35"/>
+                <ellipse cx="500" cy="500" rx="160" ry="140" fill="#FFD4B8" opacity="0.3"/>
+                
+                <!-- 紫色椭圆 -->
+                <ellipse cx="300" cy="700" rx="170" ry="190" fill="#E8D4FF" opacity="0.3"/>
+                <ellipse cx="450" cy="900" rx="140" ry="150" fill="#F0E0FF" opacity="0.25"/>
+                
+                <!-- 浅粉色椭圆 -->
+                <ellipse cx="200" cy="1000" rx="160" ry="140" fill="#FFE8F0" opacity="0.3"/>
+                <ellipse cx="400" cy="1200" rx="180" ry="160" fill="#FFD8E8" opacity="0.35"/>
+            </svg>
+            
+            <!-- Union装饰形状 (23:143) -->
+            <div style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 300px; height: 300px; opacity: 0.2; pointer-events: none; z-index: 1;" data-node-id="23:143">
+                <img src="https://www.figma.com/api/mcp/asset/6daabcf4-fde5-4611-8a8e-b703dcbd536c" 
+                     alt="装饰"
+                     style="width: 100%; height: 100%; object-fit: contain;">
+            </div>
+            
+            <div class="blur-overlay"></div>
+        </div>
+
+        <!-- 状态栏 -->
+        <div class="status-bar">
+            <div class="time" id="currentTime">9:41</div>
+            <div class="status-icons">
+                <span>📶</span>
+                <span>📡</span>
+                <span>🔋</span>
+            </div>
+        </div>
+
+        <!-- 主内容 -->
+        <div class="main-content">
+            <!-- 标题 -->
+            <div class="header">
+                <!-- 五芒星装饰 (23:153) -->
+                <div class="star-decoration">
+                    <img src="https://www.figma.com/api/mcp/asset/97eeb891-6151-4980-92ea-7f6e6359c739" 
+                         alt="星星" 
+                         style="width: 87px; height: 87px;"
+                         data-node-id="23:153">
+                </div>
+                <!-- 顶部装饰线条 (23:157, 23:159) -->
+                <img src="https://www.figma.com/api/mcp/asset/2a9db99d-008b-4141-b2ef-b3ecb933bd78" 
+                     alt="装饰1"
+                     style="position: absolute; left: 182px; top: -3.5px; width: 8.675px; height: 60.5px;"
+                     data-node-id="23:157">
+                <img src="https://www.figma.com/api/mcp/asset/fc20c5af-c3af-45d6-8da4-6f3458cff816" 
+                     alt="装饰2"
+                     style="position: absolute; left: 150.09px; top: -4px; width: 100.906px; height: 83px;"
+                     data-node-id="23:159">
+                <h1 class="title">今日五芒星</h1>
+                <div class="title-underline"></div>
+            </div>
+
+            <!-- 日期导航 -->
+            <div class="date-navigation">
+                <button class="nav-button prev" onclick="changeDate(-1)">
+                    <span>◀</span>
+                    <span>前一天</span>
+                </button>
+                <div class="current-date" id="currentDate">12月28日</div>
+                <button class="nav-button next" onclick="changeDate(1)">
+                    <span>后一天</span>
+                    <span>▶</span>
+                </button>
+            </div>
+
+            <!-- 五芒星图表 -->
+            <div class="star-chart-container">
+                <div class="star-chart">
+                    <!-- 背景圆圈网格 (41:412) -->
+                    <div style="position: absolute; left: 0; top: 0; width: 100%; height: 100%;" data-node-id="41:412">
+                        <img src="https://www.figma.com/api/mcp/asset/6a861a64-5e9e-4efd-a485-49c86506837a" 
+                             alt="背景网格"
+                             style="position: absolute; left: 10px; top: 10px; width: 219px; height: 219px;">
+                        <img src="https://www.figma.com/api/mcp/asset/4c325893-8614-4163-8475-ea1e84549d7f" 
+                             alt="背景网格2"
+                             style="position: absolute; left: 16px; top: 10px; width: 207px; height: 197px;">
+                    </div>
+                    
+                    <!-- 五芒星形状 (63:364) -->
+                    <div id="starPolygonContainer" style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 150px; height: 180px; transition: all 0.5s ease;" data-node-id="63:364">
+                        <img id="starPolygon" 
+                             src="https://www.figma.com/api/mcp/asset/c6ec7c90-e28b-4c2c-96f1-60c9c01c9ec5" 
+                             alt="五芒星"
+                             style="width: 100%; height: 100%; object-fit: contain; cursor: pointer;">
+                    </div>
+                    
+                    <!-- 标签 -->
+                    <div class="star-labels">
+                        <p class="label label-top" data-node-id="36:327">🏃‍♀️耐力</p>
+                        <p class="label label-right-top" data-node-id="36:330">💥爆发力</p>
+                        <p class="label label-right-bottom" data-node-id="36:332">💗️亲密欲望</p>
+                        <p class="label label-left-bottom" data-node-id="36:331">😌舒适度</p>
+                        <p class="label label-left-top" data-node-id="36:329">🧠专注度</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 左侧装饰元素 (24:171) -->
+            <div style="position: absolute; left: 31.5px; top: 700px; width: 19.5px; height: 66px; z-index: 5;" data-node-id="24:171">
+                <img src="https://www.figma.com/api/mcp/asset/29d2e3c2-21f2-460e-a161-a92aacb793a6" 
+                     alt="装饰" 
+                     style="width: 100%; height: 100%; object-fit: contain;">
+            </div>
+
+            <!-- 信息卡片 -->
+            <div class="info-cards">
+                <!-- 工作表现卡片 -->
+                <div class="info-card">
+                    <div class="card-background" data-node-id="24:163"></div>
+                    <div class="card-content">
+                        <div class="card-header">
+                            <h3 class="card-title">工作表现</h3>
+                        </div>
+                        <div class="phase-row">
+                            <span class="phase-label">引擎全开</span>
+                            <span class="strength-indicator">强</span>
+                        </div>
+                        <p class="card-description">
+                            高「引擎全开」爆发力强、耐受度高，适合高强度。
+                        </p>
+                        <!-- 工作插画 (34:324) -->
+                        <div class="card-illustration" data-node-id="34:324">
+                            <img src="https://www.figma.com/api/mcp/asset/567dc2d2-052a-4b67-8c69-906ea7313ef5" 
+                                 alt="工作场景" 
+                                 style="width: 100%; height: 100%; object-fit: contain;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 运动表现卡片 -->
+                <div class="info-card">
+                    <div class="card-background" data-node-id="24:163"></div>
+                    <div class="card-content">
+                        <div class="card-header">
+                            <h3 class="card-title">运动表现</h3>
+                        </div>
+                        <div class="phase-row">
+                            <span class="phase-label">引擎全开</span>
+                            <span class="strength-indicator">强</span>
+                        </div>
+                        <p class="card-description">
+                            高「引擎全开」爆发力强、耐受度高，适合高强度训练。
+                        </p>
+                        <!-- 运动插画 (43:561) -->
+                        <div class="card-illustration" data-node-id="43:561">
+                            <img src="https://www.figma.com/api/mcp/asset/311e3ea0-3e98-45e9-a6bc-936572d30ce8" 
+                                 alt="运动场景" 
+                                 style="width: 100%; height: 100%; object-fit: contain;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 聊天按钮组 (75:391) -->
+        <div style="position: absolute; left: 240px; top: 435px; cursor: pointer;" onclick="openChat()" data-node-id="75:391">
+            <!-- 聊天气泡 (75:390) -->
+            <div style="position: absolute; left: 0; top: 63px; background: rgba(255, 255, 255, 0.8); padding: 8px 10px; border-radius: 40px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);" data-node-id="75:390">
+                <!-- 聊天文字 (75:389) -->
+                <p style="font-size: 12px; color: black; white-space: nowrap; margin: 0;" data-node-id="75:389">和Sunnie聊一聊吧~</p>
+            </div>
+            
+            <!-- Sunnie头像容器 (75:388) -->
+            <div style="position: absolute; left: 57px; top: 0;" data-node-id="75:388">
+                <!-- 背景圆圈 (75:387) -->
+                <div style="position: absolute; left: 1.19px; top: 1.79px; width: 68.43px; height: 68.43px;" data-node-id="75:387">
+                    <img src="https://www.figma.com/api/mcp/asset/580ac889-d889-4c8d-8fe3-a12d6ee07c87" 
+                         alt="背景"
+                         style="width: 100%; height: 100%; object-fit: contain;">
+                </div>
+                <!-- Sunnie头像 (75:385) -->
+                <div style="position: absolute; left: 0; top: 0; width: 71.405px; height: 72px; overflow: hidden; cursor: pointer;" data-node-id="75:385" onclick="window.location.href='index3.html'">
+                    <img src="https://www.figma.com/api/mcp/asset/c119c586-4cd7-4ca3-81ca-c8fea078e7fa" 
+                         alt="Sunnie" 
+                         style="position: absolute; left: -29.21%; top: -62.81%; width: 158.91%; height: 210.84%; object-fit: contain; pointer-events: none;">
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部导航 -->
+        <div class="bottom-nav">
+            <div class="home-indicator"></div>
+        </div>
+    </div>
+
+    <script>
+        // 页面加载完成
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                const loader = document.getElementById('pageLoader');
+                loader.classList.add('hidden');
+                
+                // 显示欢迎提示
+                showTooltip('👋 欢迎回来！左右滑动可以切换日期哦~', 3000);
+            }, 500);
+        });
+        
+        // 显示工具提示
+        function showTooltip(message, duration = 2000) {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.textContent = message;
+            tooltip.classList.add('show');
+            
+            setTimeout(() => {
+                tooltip.classList.remove('show');
+            }, duration);
+        }
+        
+        // 更新时间
+        function updateTime() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('currentTime').textContent = `${hours}:${minutes}`;
+        }
+
+        // 初始化时间并每分钟更新
+        updateTime();
+        setInterval(updateTime, 60000);
+
+        // 当前日期 - 从localStorage恢复或使用今天
+        let currentDate = new Date();
+        
+        // 从本地存储恢复日期
+        function loadSavedDate() {
+            const savedDate = localStorage.getItem('selectedDate');
+            if (savedDate) {
+                currentDate = new Date(savedDate);
+            }
+        }
+        
+        // 保存日期到本地存储
+        function saveDate() {
+            localStorage.setItem('selectedDate', currentDate.toISOString());
+        }
+        
+        // 初始化时加载保存的日期
+        loadSavedDate();
+
+        // 更新日期显示
+        function updateDateDisplay() {
+            const month = currentDate.getMonth() + 1;
+            const day = currentDate.getDate();
+            document.getElementById('currentDate').textContent = `${month}月${day}日`;
+            
+            // 保存日期
+            saveDate();
+        }
+
+        // 改变日期
+        function changeDate(delta) {
+            currentDate.setDate(currentDate.getDate() + delta);
+            updateDateDisplay();
+            updateStarChart();
+            
+            // 显示日期变化提示
+            const direction = delta > 0 ? '后一天' : '前一天';
+            showTooltip(`📅 切换到${direction}`, 1000);
+            
+            // 添加动画效果
+            const cards = document.querySelectorAll('.info-card');
+            cards.forEach((card, index) => {
+                card.style.animation = 'none';
+                setTimeout(() => {
+                    card.style.animation = `fadeIn 0.5s ease-out ${index * 0.1}s`;
+                }, 10);
+            });
+            
+            // 添加五芒星变化动画
+            const starPolygonContainer = document.getElementById('starPolygonContainer');
+            if (starPolygonContainer) {
+                const currentTransform = starPolygonContainer.style.transform;
+                starPolygonContainer.style.transform = 'translate(-50%, -50%) scale(0.85)';
+                setTimeout(() => {
+                    starPolygonContainer.style.transform = currentTransform;
+                }, 300);
+            }
+        }
+
+        // 更新五芒星图表（根据日期动态调整）
+        function updateStarChart() {
+            const polygonContainer = document.getElementById('starPolygonContainer');
+            
+            // 模拟不同日期的数据变化
+            const dayOfCycle = currentDate.getDate() % 28;
+            const phase = Math.floor(dayOfCycle / 7);
+            
+            // 根据周期阶段调整五芒星的大小
+            let scale;
+            let opacity;
+            
+            switch(phase) {
+                case 0: // 月经期 - 较小的五芒星
+                    scale = 0.75;
+                    opacity = 0.7;
+                    break;
+                case 1: // 卵泡期 - 中等五芒星
+                    scale = 0.9;
+                    opacity = 0.85;
+                    break;
+                case 2: // 排卵期 - 最大的五芒星
+                    scale = 1.1;
+                    opacity = 1;
+                    break;
+                case 3: // 黄体期 - 中等五芒星
+                    scale = 0.85;
+                    opacity = 0.8;
+                    break;
+            }
+            
+            if (polygonContainer) {
+                polygonContainer.style.transform = `translate(-50%, -50%) scale(${scale})`;
+                polygonContainer.style.opacity = opacity;
+            }
+            
+            // 更新卡片内容
+            updateCardContent(phase);
+        }
+        
+        // 更新卡片内容根据周期阶段
+        function updateCardContent(phase) {
+            const phases = [
+                {
+                    name: '休息期',
+                    strength: '中',
+                    workDesc: '中「休息恢复」适合轻度工作，需要更多休息。',
+                    sportDesc: '中「休息恢复」适合轻度拉伸，避免高强度训练。'
+                },
+                {
+                    name: '引擎全开',
+                    strength: '强',
+                    workDesc: '高「引擎全开」爆发力强、耐受度高，适合高强度。',
+                    sportDesc: '高「引擎全开」爆发力强、耐受度高，适合高强度训练。'
+                },
+                {
+                    name: '巅峰状态',
+                    strength: '极强',
+                    workDesc: '极强「巅峰状态」精力充沛，专注度最佳。',
+                    sportDesc: '极强「巅峰状态」体能巅峰，适合挑战极限。'
+                },
+                {
+                    name: '平稳期',
+                    strength: '良好',
+                    workDesc: '良好「平稳期」状态稳定，适合日常工作。',
+                    sportDesc: '良好「平稳期」状态稳定，适合常规训练。'
+                }
+            ];
+            
+            const phaseData = phases[phase];
+            const cards = document.querySelectorAll('.info-card');
+            
+            if (cards.length >= 2) {
+                // 更新工作表现卡片
+                const workPhaseLabel = cards[0].querySelector('.phase-label');
+                const workStrength = cards[0].querySelector('.strength-indicator');
+                const workDesc = cards[0].querySelector('.card-description');
+                
+                if (workPhaseLabel) workPhaseLabel.textContent = phaseData.name;
+                if (workStrength) workStrength.textContent = phaseData.strength;
+                if (workDesc) workDesc.textContent = phaseData.workDesc;
+                
+                // 更新运动表现卡片
+                const sportPhaseLabel = cards[1].querySelector('.phase-label');
+                const sportStrength = cards[1].querySelector('.strength-indicator');
+                const sportDesc = cards[1].querySelector('.card-description');
+                
+                if (sportPhaseLabel) sportPhaseLabel.textContent = phaseData.name;
+                if (sportStrength) sportStrength.textContent = phaseData.strength;
+                if (sportDesc) sportDesc.textContent = phaseData.sportDesc;
+            }
+        }
+
+        // 打开聊天
+        function openChat() {
+            showTooltip('💬 正在连接Sunnie...', 2000);
+            
+            setTimeout(() => {
+                // 模拟打开聊天
+                const shouldOpen = confirm('要和Sunnie聊聊今天的身体状况吗？');
+                if (shouldOpen) {
+                    alert('💬 Sunnie: 你好呀！我看到你今天状态不错哦~有什么想聊的吗？\n\n（聊天功能开发中...）');
+                    // 这里可以添加导航到聊天页面的逻辑
+                    // window.location.href = '/chat.html';
+                }
+            }, 500);
+        }
+
+        // 五芒星交互效果
+        document.addEventListener('DOMContentLoaded', function() {
+            const starPolygon = document.getElementById('starPolygon');
+            const starPolygonContainer = document.getElementById('starPolygonContainer');
+            
+            // 鼠标悬停效果
+            if (starPolygon) {
+                starPolygon.addEventListener('mouseenter', function() {
+                    starPolygonContainer.style.transform = starPolygonContainer.style.transform.replace(/scale\([^)]+\)/, function(match) {
+                        const currentScale = parseFloat(match.match(/[\d.]+/)?.[0]) || 1;
+                        return `scale(${currentScale * 1.05})`;
+                    });
+                });
+                
+                starPolygon.addEventListener('mouseleave', function() {
+                    // 恢复原始缩放
+                    updateStarChart();
+                });
+                
+                // 点击效果 - 显示各项指标
+                starPolygon.addEventListener('click', function() {
+                    const container = starPolygonContainer;
+                    const originalTransform = container.style.transform;
+                    container.style.transform = originalTransform.replace(/scale\([^)]+\)/, function(match) {
+                        const currentScale = parseFloat(match.match(/[\d.]+/)?.[0]) || 1;
+                        return `scale(${currentScale * 1.15})`;
+                    });
+                    
+                    setTimeout(() => {
+                        container.style.transform = originalTransform;
+                    }, 200);
+                    
+                    // 显示提示信息
+                    showStarDetails();
+                });
+            }
+        });
+        
+        // 显示五芒星详细信息
+        function showStarDetails() {
+            const dayOfCycle = currentDate.getDate() % 28;
+            const phase = Math.floor(dayOfCycle / 7);
+            
+            const phaseNames = ['月经期', '卵泡期', '排卵期', '黄体期'];
+            const phaseEmojis = ['🌙', '🌱', '🌟', '🌸'];
+            
+            const message = `
+                ${phaseEmojis[phase]} 当前阶段：${phaseNames[phase]}
+                
+                🏃‍♀️ 耐力：${['中', '高', '极高', '良好'][phase]}
+                💥 爆发力：${['中', '高', '极高', '良好'][phase]}
+                💗️ 亲密欲望：${['低', '中', '高', '中'][phase]}
+                😌 舒适度：${['低', '高', '高', '中'][phase]}
+                🧠 专注度：${['中', '高', '极高', '良好'][phase]}
+            `;
+            
+            alert(message);
+        }
+
+        // 初始化
+        updateDateDisplay();
+        updateStarChart();
+
+        // 添加滚动效果
+        window.addEventListener('scroll', function() {
+            const scrolled = window.pageYOffset;
+            const header = document.querySelector('.header');
+            if (header) {
+                header.style.transform = `translateY(${scrolled * 0.3}px)`;
+            }
+        });
+
+        // 卡片点击展开效果
+        document.querySelectorAll('.info-card').forEach((card, index) => {
+            card.addEventListener('click', function(e) {
+                // 避免点击插画时触发
+                if (e.target.closest('.card-illustration')) return;
+                
+                this.style.transform = 'scale(0.98)';
+                setTimeout(() => {
+                    this.style.transform = 'scale(1)';
+                }, 100);
+                
+                // 显示更多信息
+                const cardType = index === 0 ? '工作' : '运动';
+                showCardDetails(cardType);
+            });
+        });
+        
+        // 显示卡片详细信息
+        function showCardDetails(type) {
+            const dayOfCycle = currentDate.getDate() % 28;
+            const phase = Math.floor(dayOfCycle / 7);
+            
+            const workTips = [
+                '建议：适当减少工作强度，多休息，避免重大决策。',
+                '建议：精力充沛，适合处理复杂任务和重要会议。',
+                '建议：创造力和专注度达到巅峰，是冲刺的最佳时机！',
+                '建议：保持稳定工作节奏，适合完成日常任务。'
+            ];
+            
+            const sportTips = [
+                '建议：选择瑜伽、散步等轻度运动，注意保暖。',
+                '建议：可以进行力量训练和有氧运动，效果显著。',
+                '建议：体能巅峰期，适合挑战高强度训练和新纪录！',
+                '建议：保持常规训练强度，注意补充营养。'
+            ];
+            
+            const tips = type === '工作' ? workTips : sportTips;
+            alert(`${type}表现详情\n\n${tips[phase]}`);
+        }
+
+        // 键盘导航支持
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') {
+                changeDate(-1);
+            } else if (e.key === 'ArrowRight') {
+                changeDate(1);
+            }
+        });
+
+        // 触摸滑动支持
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.addEventListener('touchstart', function(e) {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        document.addEventListener('touchend', function(e) {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            const swipeThreshold = 50;
+            const diff = touchStartX - touchEndX;
+            
+            if (Math.abs(diff) > swipeThreshold) {
+                if (diff > 0) {
+                    // 向左滑动 - 下一天
+                    changeDate(1);
+                } else {
+                    // 向右滑动 - 前一天
+                    changeDate(-1);
+                }
+            }
+        }
+        
+        // 添加双击返回今天
+        let lastTap = 0;
+        document.addEventListener('dblclick', function(e) {
+            const now = Date.now();
+            if (now - lastTap < 300) {
+                currentDate = new Date();
+                updateDateDisplay();
+                updateStarChart();
+                showTooltip('📅 已返回今天', 1500);
+            }
+            lastTap = now;
+        });
+    </script>
+</body>
+</html>
